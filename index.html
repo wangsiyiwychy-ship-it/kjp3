@@ -72,7 +72,9 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">搜索内容</label>
                             <input type="text" id="searchInput" placeholder="输入细菌或药物名称..." 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200">
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200" 
+                                list="searchSuggestions">
+                            <datalist id="searchSuggestions"></datalist>
                         </div>
                     </div>
                     
@@ -236,6 +238,8 @@
             document.getElementById('searchInput').addEventListener('keyup', function(e) {
                 if (e.key === 'Enter') performSearch();
             });
+            document.getElementById('searchType').addEventListener('change', updateSearchSuggestions);
+            document.getElementById('searchInput').addEventListener('input', updateSearchSuggestions);
             
             // 比较功能
             document.getElementById('compareType').addEventListener('change', updateSuggestions);
@@ -246,6 +250,7 @@
             
             // 初始化建议列表
             updateSuggestions();
+            updateSearchSuggestions();
         }
         
         // 执行搜索
@@ -277,28 +282,52 @@
         
         // 按细菌搜索
         function searchByBacteria(term) {
-            // 查找匹配的细菌
-            const matchedBacteria = antibioticData.data.filter(item => 
-                item.bacteria.toLowerCase().includes(term)
-            );
+            const searchTerm = term.toLowerCase().trim();
+            
+            // 在匹配时，移除细菌名中的\n再进行匹配
+            const matchedBacteria = antibioticData.data.filter(item => {
+                // 移除细菌名中的\n分隔符
+                const cleanBacteriaName = item.bacteria.toLowerCase().replace(/\n/g, '');
+                const cleanSearchTerm = searchTerm.replace(/\n/g, '');
+                
+                // 首先尝试精确匹配
+                if (cleanBacteriaName === cleanSearchTerm) return true;
+                
+                // 然后尝试包含匹配
+                return cleanBacteriaName.includes(cleanSearchTerm);
+            });
             
             displaySearchResults(matchedBacteria, 'bacteria');
         }
         
         // 按药物搜索
         function searchByDrug(term) {
-            // 查找包含该药物的细菌
-            const matchedBacteria = antibioticData.data.filter(item => {
-                return Object.entries(item.antibiotics).some(([drug, status]) => 
-                    drug.toLowerCase().includes(term) && status !== '不推荐'
-                );
+            // 查找完全匹配的药物名称（不区分大小写）
+            const matchedDrugs = antibioticData.drug_list.filter(drug => 
+                drug.toLowerCase().includes(term.toLowerCase())
+            );
+            
+            // 显示全部相关细菌（不筛选活性）
+            const allBacteria = [];
+            antibioticData.data.forEach(bacteriaData => {
+                // 检查该细菌是否有任何搜索的药物数据
+                const hasMatchedDrugs = matchedDrugs.some(drug => {
+                    const status = bacteriaData.antibiotics[drug];
+                    return status !== undefined; // 只要有数据就显示
+                });
+                
+                if (hasMatchedDrugs) {
+                    allBacteria.push(bacteriaData);
+                }
             });
             
-            displaySearchResults(matchedBacteria, 'drug', term);
+            console.log(`显示 ${allBacteria.length} 个细菌和 ${matchedDrugs.length} 个匹配药物`);
+            
+            displaySearchResults(allBacteria, 'drug', matchedDrugs);
         }
         
         // 显示搜索结果
-        function displaySearchResults(results, type, drugTerm = '') {
+        function displaySearchResults(results, type, drugTerms = '') {
             const resultsArea = document.getElementById('resultsArea');
             const resultsTitle = document.getElementById('resultsTitle');
             const resultsHeader = document.getElementById('resultsHeader');
@@ -315,7 +344,7 @@
             );
             rowsToRemove.forEach(row => resultsBody.removeChild(row));
             
-            if (results.length === 0) {
+            if (results.length === 0 || (Array.isArray(drugTerms) && drugTerms.length === 0)) {
                 resultsTitle.textContent = '未找到匹配的结果';
                 showEmptyState();
                 return;
@@ -324,7 +353,13 @@
             hideEmptyState();
             
             if (type === 'bacteria') {
-                resultsTitle.textContent = '细菌敏感性结果';
+                // 显示第一个匹配细菌的结果（包含拉丁名称）
+                const firstResult = results[0];
+                document.getElementById('resultsTitle').textContent = `细菌: ${firstResult.bacteria} 的敏感性结果`;
+                
+                // 获取所有药物
+                const allDrugs = antibioticData.drug_list;
+                console.log(`显示 ${allDrugs.length} 个药物的敏感性`);
                 
                 // 设置表头
                 const th1 = document.createElement('th');
@@ -338,77 +373,84 @@
                 resultsHeader.appendChild(th1);
                 resultsHeader.appendChild(th2);
                 
-                // 显示第一个匹配细菌的结果
-                const firstResult = results[0];
-                document.getElementById('resultsTitle').textContent = `细菌: ${firstResult.bacteria} 的敏感性结果`;
-                
-                // 添加结果行
-                Object.entries(firstResult.antibiotics).forEach(([drug, status]) => {
-                    if (status !== '不推荐') {
-                        const tr = document.createElement('tr');
-                        
-                        const td1 = document.createElement('td');
-                        td1.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900';
-                        td1.textContent = drug;
-                        
-                        const td2 = document.createElement('td');
-                        td2.className = 'px-6 py-4 whitespace-nowrap text-sm';
-                        
-                        // 根据敏感性设置颜色
-                        let statusClass = 'text-gray-700';
-                        if (status === '推荐') statusClass = 'text-green-600 font-medium';
-                        else if (status === '有活性') statusClass = 'text-blue-600';
-                        else if (status === '不确定') statusClass = 'text-yellow-600';
-                        
-                        td2.className += ' ' + statusClass;
-                        td2.textContent = status;
-                        
-                        tr.appendChild(td1);
-                        tr.appendChild(td2);
-                        resultsBody.appendChild(tr);
-                    }
+                // 添加结果行 - 显示所有药物（包括不推荐的）
+                allDrugs.forEach(drug => {
+                    const status = firstResult.antibiotics[drug] || '无数据';
+                    const tr = document.createElement('tr');
+                    
+                    const td1 = document.createElement('td');
+                    td1.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900';
+                    td1.textContent = drug;
+                    
+                    const td2 = document.createElement('td');
+                    td2.className = 'px-6 py-4 whitespace-nowrap text-sm';
+                    
+                    // 根据敏感性设置颜色
+                    let statusClass = 'text-gray-400';
+                    if (status === '推荐') statusClass = 'text-green-600 font-medium';
+                    else if (status === '有活性') statusClass = 'text-blue-600';
+                    else if (status === '不确定') statusClass = 'text-yellow-600';
+                    else if (status === '不推荐') statusClass = 'text-red-400';
+                    
+                    td2.className += ' ' + statusClass;
+                    td2.textContent = status;
+                    
+                    tr.appendChild(td1);
+                    tr.appendChild(td2);
+                    resultsBody.appendChild(tr);
                 });
             } else {
-                resultsTitle.textContent = `对 ${drugTerm} 有敏感性的细菌`;
+                // 按照Excel格式显示：细菌名从上到下，抗菌药物从左至右
+                resultsTitle.textContent = `药物敏感性结果 (显示所有${results.length}个细菌)`;
                 
-                // 设置表头
+                // 设置表头 - 第一列是细菌名称
                 const th1 = document.createElement('th');
                 th1.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
                 th1.textContent = '细菌';
-                
-                const th2 = document.createElement('th');
-                th2.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-                th2.textContent = '敏感性';
-                
                 resultsHeader.appendChild(th1);
-                resultsHeader.appendChild(th2);
                 
-                // 添加结果行
-                results.forEach(item => {
-                    const drugStatus = item.antibiotics[drugTerm];
-                    if (drugStatus && drugStatus !== '不推荐') {
-                        const tr = document.createElement('tr');
+                // 获取要显示的药物列表
+                const displayDrugs = Array.isArray(drugTerms) ? drugTerms : [drugTerms];
+                console.log(`显示 ${displayDrugs.length} 个匹配药物`);
+                
+                // 为每个药物添加表头
+                displayDrugs.forEach(drug => {
+                    const th = document.createElement('th');
+                    th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                    th.textContent = drug;
+                    resultsHeader.appendChild(th);
+                });
+                
+                // 添加结果行 - 每个细菌一行
+                results.forEach(bacteriaData => {
+                    const tr = document.createElement('tr');
+                    
+                    // 细菌名称单元格（包含拉丁名称）
+                    const td1 = document.createElement('td');
+                    td1.className = 'px-6 py-4 text-sm text-gray-900 whitespace-normal'; // 允许换行
+                    td1.textContent = bacteriaData.bacteria;
+                    tr.appendChild(td1);
+                    
+                    // 为每个药物添加敏感性结果
+                    displayDrugs.forEach(drug => {
+                        const td = document.createElement('td');
+                        td.className = 'px-6 py-4 whitespace-nowrap text-sm';
                         
-                        const td1 = document.createElement('td');
-                        td1.className = 'px-6 py-4 text-sm text-gray-900';
-                        td1.textContent = item.bacteria;
-                        
-                        const td2 = document.createElement('td');
-                        td2.className = 'px-6 py-4 whitespace-nowrap text-sm';
+                        const status = bacteriaData.antibiotics[drug] || '无数据';
                         
                         // 根据敏感性设置颜色
-                        let statusClass = 'text-gray-700';
-                        if (drugStatus === '推荐') statusClass = 'text-green-600 font-medium';
-                        else if (drugStatus === '有活性') statusClass = 'text-blue-600';
-                        else if (drugStatus === '不确定') statusClass = 'text-yellow-600';
+                        let statusClass = 'text-gray-400';
+                        if (status === '推荐') statusClass = 'text-green-600 font-medium';
+                        else if (status === '有活性') statusClass = 'text-blue-600';
+                        else if (status === '不确定') statusClass = 'text-yellow-600';
+                        else if (status === '不推荐') statusClass = 'text-red-400';
                         
-                        td2.className += ' ' + statusClass;
-                        td2.textContent = drugStatus;
-                        
-                        tr.appendChild(td1);
-                        tr.appendChild(td2);
-                        resultsBody.appendChild(tr);
-                    }
+                        td.className += ' ' + statusClass;
+                        td.textContent = status;
+                        tr.appendChild(td);
+                    });
+                    
+                    resultsBody.appendChild(tr);
                 });
             }
             
@@ -421,27 +463,92 @@
             document.getElementById('resultsArea').classList.add('hidden');
         }
         
-        // 更新建议列表
+        // 更新搜索建议列表
+        function updateSearchSuggestions() {
+            const searchType = document.getElementById('searchType').value;
+            const inputTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const suggestionsList = document.getElementById('searchSuggestions');
+            
+            // 清空建议列表
+            suggestionsList.innerHTML = '';
+            
+            if (!antibioticData || !inputTerm) return;
+            
+            // 根据类型获取建议列表
+            const sourceList = searchType === 'bacteria' ? antibioticData.bacteria_list : antibioticData.drug_list;
+            
+            // 在匹配时，移除细菌名中的\n再进行匹配
+            const filteredSuggestions = sourceList.filter(item => {
+                if (searchType !== 'bacteria') {
+                    // 药物保持原有逻辑
+                    return item.toLowerCase().includes(inputTerm);
+                }
+                
+                // 移除细菌名中的\n分隔符
+                const cleanItemName = item.toLowerCase().replace(/\n/g, '');
+                const cleanInputTerm = inputTerm.replace(/\n/g, '');
+                
+                // 精确匹配
+                if (cleanItemName === cleanInputTerm) return true;
+                
+                // 包含匹配
+                return cleanItemName.includes(cleanInputTerm);
+            });
+            
+            // 添加建议项（对于细菌，使用完整名称）
+            filteredSuggestions.slice(0, 10).forEach(item => {
+                const option = document.createElement('option');
+                // 对于细菌，显示完整名称；对于药物，保持原有逻辑
+                if (searchType === 'bacteria') {
+                    option.value = item; // 显示完整名称（包含拉丁名）
+                } else {
+                    option.value = item;
+                }
+                suggestionsList.appendChild(option);
+            });
+        }
+        
+        // 更新比较建议列表
         function updateSuggestions() {
             const compareType = document.getElementById('compareType').value;
-            const inputTerm = document.getElementById('compareInput').value.toLowerCase();
+            const inputTerm = document.getElementById('compareInput').value.toLowerCase().trim();
             const suggestionsList = document.getElementById('suggestions');
             
             // 清空建议列表
             suggestionsList.innerHTML = '';
             
+            if (!antibioticData) return;
+            
             // 根据类型获取建议列表
             const sourceList = compareType === 'bacteria' ? antibioticData.bacteria_list : antibioticData.drug_list;
             
-            // 筛选匹配的建议
-            const filteredSuggestions = sourceList.filter(item => 
-                item.toLowerCase().includes(inputTerm)
-            );
+            // 在匹配时，移除细菌名中的\n再进行匹配
+            const filteredSuggestions = sourceList.filter(item => {
+                if (compareType !== 'bacteria') {
+                    // 药物保持原有逻辑
+                    return item.toLowerCase().includes(inputTerm);
+                }
+                
+                // 移除细菌名中的\n分隔符
+                const cleanItemName = item.toLowerCase().replace(/\n/g, '');
+                const cleanInputTerm = inputTerm.replace(/\n/g, '');
+                
+                // 精确匹配
+                if (cleanItemName === cleanInputTerm) return true;
+                
+                // 包含匹配
+                return cleanItemName.includes(cleanInputTerm);
+            });
             
             // 添加建议项
             filteredSuggestions.slice(0, 10).forEach(item => {
                 const option = document.createElement('option');
-                option.value = item;
+                // 对于细菌，显示完整名称；对于药物，保持原有逻辑
+                if (compareType === 'bacteria') {
+                    option.value = item; // 显示完整名称（包含拉丁名）
+                } else {
+                    option.value = item;
+                }
                 suggestionsList.appendChild(option);
             });
         }
@@ -463,7 +570,33 @@
             
             // 检查项目是否存在
             const sourceList = compareType === 'bacteria' ? antibioticData.bacteria_list : antibioticData.drug_list;
-            const isValidItem = sourceList.includes(inputValue);
+            
+            // 对于细菌，使用宽松匹配并获取完整名称
+            let fullItemName = inputValue;
+            let isValidItem = false;
+            
+            if (compareType === 'bacteria') {
+                // 移除搜索词中的\n分隔符
+                const cleanInputValue = inputValue.toLowerCase().replace(/\n/g, '');
+                
+                // 在匹配时，移除细菌名中的\n再进行匹配
+                const matchedItem = sourceList.find(item => {
+                    const cleanItemName = item.toLowerCase().replace(/\n/g, '');
+                    
+                    // 精确匹配
+                    if (cleanItemName === cleanInputValue) return true;
+                    
+                    // 包含匹配
+                    return cleanItemName.includes(cleanInputValue);
+                });
+                
+                if (matchedItem) {
+                    isValidItem = true;
+                    fullItemName = matchedItem; // 使用完整的细菌名称（包含拉丁名）
+                }
+            } else {
+                isValidItem = sourceList.includes(inputValue);
+            }
             
             if (!isValidItem) {
                 alert('请输入有效的项目名称');
@@ -471,13 +604,13 @@
             }
             
             // 检查是否已添加
-            if (selectedComparisonItems.includes(inputValue)) {
+            if (selectedComparisonItems.includes(fullItemName)) {
                 alert('该项目已添加');
                 return;
             }
             
             // 添加到已选项目
-            selectedComparisonItems.push(inputValue);
+            selectedComparisonItems.push(fullItemName);
             updateSelectedItemsDisplay();
             
             // 清空输入框
@@ -563,36 +696,32 @@
             th.textContent = '抗生素';
             resultsHeader.appendChild(th);
             
-            // 为每个选中的细菌添加表头
+            // 为每个选中的细菌添加表头（包含拉丁名称）
             selectedComparisonItems.forEach(bacteria => {
                 const th = document.createElement('th');
-                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-                th.textContent = bacteria.split('\n')[0]; // 只显示中文名
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal'; // 允许换行
+                th.textContent = bacteria; // 显示完整名称（包含拉丁名）
                 resultsHeader.appendChild(th);
             });
             
-            // 获取所有相关抗生素
+            // 获取所有相关抗生素 - 显示全部抗生素（不筛选活性）
             const allAntibiotics = new Set();
             selectedComparisonItems.forEach(bacteria => {
                 const bacteriaData = antibioticData.data.find(item => item.bacteria === bacteria);
                 if (bacteriaData) {
                     Object.keys(bacteriaData.antibiotics).forEach(antibiotic => {
-                        // 只添加在至少一个细菌中有活性的抗生素
-                        if (Object.values(selectedComparisonItems.reduce((acc, b) => {
-                            const data = antibioticData.data.find(item => item.bacteria === b);
-                            if (data && data.antibiotics[antibiotic] && data.antibiotics[antibiotic] !== '不推荐') {
-                                acc[b] = true;
-                            }
-                            return acc;
-                        }, {})).length > 0) {
-                            allAntibiotics.add(antibiotic);
-                        }
+                        allAntibiotics.add(antibiotic);
                     });
                 }
             });
             
+            // 按drug_list顺序显示抗生素
+            const allAntibioticsArray = antibioticData.drug_list.filter(antibiotic => allAntibiotics.has(antibiotic));
+            
+            console.log(`比较功能显示 ${allAntibioticsArray.length} 个抗生素`);
+            
             // 添加结果行
-            Array.from(allAntibiotics).sort().forEach(antibiotic => {
+            allAntibioticsArray.forEach(antibiotic => {
                 const tr = document.createElement('tr');
                 
                 const td1 = document.createElement('td');
@@ -660,27 +789,29 @@
                 resultsHeader.appendChild(th);
             });
             
-            // 获取所有相关细菌
-            const allBacteria = new Set();
+            // 获取所有相关细菌 - 显示全部细菌（不筛选活性）
+            const allBacteria = [];
             antibioticData.data.forEach(bacteriaData => {
-                // 检查该细菌是否对至少一个选中的药物有活性
-                const hasActiveDrug = selectedComparisonItems.some(drug => {
+                // 检查该细菌是否有任何选中的药物数据
+                const hasSelectedDrugs = selectedComparisonItems.some(drug => {
                     const status = bacteriaData.antibiotics[drug];
-                    return status && status !== '不推荐';
+                    return status !== undefined; // 只要有数据就显示
                 });
                 
-                if (hasActiveDrug) {
-                    allBacteria.add(bacteriaData.bacteria);
+                if (hasSelectedDrugs) {
+                    allBacteria.push(bacteriaData);
                 }
             });
             
-            // 添加结果行
-            Array.from(allBacteria).sort().forEach(bacteria => {
+            console.log(`比较功能显示 ${allBacteria.length} 个细菌`);
+            
+            // 添加结果行 - 按原始顺序显示细菌
+            allBacteria.forEach(bacteriaData => {
                 const tr = document.createElement('tr');
                 
                 const td1 = document.createElement('td');
                 td1.className = 'px-6 py-4 text-sm text-gray-900';
-                td1.textContent = bacteria.split('\n')[0]; // 只显示中文名
+                td1.textContent = bacteriaData.bacteria.split('\n')[0]; // 只显示中文名
                 tr.appendChild(td1);
                 
                 // 为每个药物添加结果
@@ -688,8 +819,7 @@
                     const td = document.createElement('td');
                     td.className = 'px-6 py-4 whitespace-nowrap text-sm';
                     
-                    const bacteriaData = antibioticData.data.find(item => item.bacteria === bacteria);
-                    const status = bacteriaData ? bacteriaData.antibiotics[drug] : '无数据';
+                    const status = bacteriaData.antibiotics[drug] || '无数据';
                     
                     // 根据敏感性设置颜色
                     let statusClass = 'text-gray-400';
