@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抗菌谱查询系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#4f46e5',
+                        accent: '#4338ca',
+                        light: '#f3f4f6',
+                        dark: '#1f2937',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            .gradient-bg {
+                background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 头部区域 -->
+    <header class="gradient-bg text-white py-8 px-4">
+        <div class="container mx-auto text-center">
+            <h1 class="text-[clamp(1.8rem,5vw,2.8rem)] font-bold mb-2">
+                <i class="fa fa-flask mr-2"></i>抗菌谱查询系统
+            </h1>
+            <p class="text-[clamp(1rem,2vw,1.2rem)] opacity-90">
+                基于《53版热病》抗菌谱数据，快速查询细菌与药物敏感性
+            </p>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 搜索功能卡片 -->
+            <div class="bg-white rounded-xl p-6 card-shadow transition-all duration-300 hover:shadow-lg">
+                <h2 class="text-xl font-bold text-center mb-6 text-gray-800 flex items-center justify-center">
+                    <i class="fa fa-search text-primary mr-2"></i>搜索功能
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">搜索类型</label>
+                            <select id="searchType" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200">
+                                <option value="bacteria">按细菌名称搜索</option>
+                                <option value="drug">按药物名称搜索</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">搜索内容</label>
+                            <input type="text" id="searchInput" placeholder="输入细菌或药物名称..." 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button id="searchBtn" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-secondary transition-all duration-300 flex items-center transform hover:scale-105">
+                                <i class="fa fa-search mr-2"></i>搜索
+                            </button>
+                            <button id="clearSearchBtn" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-all duration-300 flex items-center transform hover:scale-105">
+                                <i class="fa fa-refresh mr-2"></i>清空
+                            </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 比较功能卡片 -->
+            <div class="bg-white rounded-xl p-6 card-shadow transition-all duration-300 hover:shadow-lg">
+                <h2 class="text-xl font-bold text-center mb-6 text-gray-800 flex items-center justify-center">
+                    <i class="fa fa-exchange text-primary mr-2"></i>比较功能
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">比较类型</label>
+                            <select id="compareType" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200">
+                                <option value="bacteria">比较细菌</option>
+                                <option value="drug">比较药物</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">输入项目名称</label>
+                            <input type="text" id="compareInput" placeholder="输入要比较的项目..." 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200" 
+                                list="suggestions">
+                            <datalist id="suggestions"></datalist>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">已选项目：</label>
+                        <div id="selectedItems" class="min-h-[60px] p-3 border border-gray-300 rounded-md bg-gray-50"></div>
+                        <p class="text-xs text-gray-500 mt-1">提示: 输入名称并按回车添加项目，至少选择2个项目才能进行比较</p>
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button id="compareBtn" class="px-6 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-all duration-300 flex items-center transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <i class="fa fa-bar-chart mr-2"></i>比较
+                            </button>
+                            <button id="clearCompareBtn" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-all duration-300 flex items-center transform hover:scale-105">
+                                <i class="fa fa-trash mr-2"></i>清空选择
+                            </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结果显示区域 -->
+        <div id="resultsArea" class="mt-8 hidden">
+            <div class="bg-white rounded-xl p-6 card-shadow transition-all duration-300 hover:shadow-lg">
+                <h2 id="resultsTitle" class="text-xl font-bold mb-4 text-gray-800"></h2>
+                <div id="resultsContent" class="overflow-x-auto rounded-lg border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr id="resultsHeader"></tr>
+                        </thead>
+                        <tbody id="resultsBody" class="bg-white divide-y divide-gray-200">
+                            <!-- 加载状态 -->
+                            <tr id="loadingRow" class="hidden">
+                                <td colspan="100" class="px-6 py-12 text-center">
+                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                    <p class="mt-2 text-gray-600">加载中...</p>
+                                </td>
+                            </tr>
+                            <!-- 空状态 -->
+                            <tr id="emptyStateRow" class="hidden">
+                                <td colspan="100" class="px-6 py-12 text-center">
+                                    <i class="fa fa-search fa-3x text-gray-300 mb-3"></i>
+                                    <p class="text-gray-500 mb-1">未找到匹配结果</p>
+                                    <p class="text-gray-400 text-sm">请尝试使用不同的搜索关键词</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-6 px-4 mt-8">
+        <div class="container mx-auto text-center">
+            <p>抗菌谱查询系统 - 基于《53版热病》数据</p>
+        </div>
+    </footer>
+
+    <!-- 数据加载和处理 -->
+    <script>
+        // 数据对象，将从antibiotic_data.json加载
+        let antibioticData = null;
+        let selectedComparisonItems = [];
+        
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('loadingRow').classList.remove('hidden');
+            document.getElementById('emptyStateRow').classList.add('hidden');
+        }
+        
+        // 隐藏加载状态
+        function hideLoading() {
+            document.getElementById('loadingRow').classList.add('hidden');
+        }
+        
+        // 显示空状态
+        function showEmptyState() {
+            document.getElementById('emptyStateRow').classList.remove('hidden');
+        }
+        
+        // 隐藏空状态
+        function hideEmptyState() {
+            document.getElementById('emptyStateRow').classList.add('hidden');
+        }
+        
+        // 加载数据
+        async function loadData() {
+            try {
+                // 显示页面加载提示
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.className = 'fixed inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50';
+                loadingIndicator.innerHTML = `
+                    <div class="text-center">
+                        <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mb-4"></div>
+                        <p class="text-lg text-gray-700">正在加载抗菌谱数据...</p>
+                    </div>
+                `;
+                document.body.appendChild(loadingIndicator);
+                
+                const response = await fetch('antibiotic_data.json');
+                antibioticData = await response.json();
+                console.log('数据加载成功');
+                initEventListeners();
+                
+                // 移除加载提示
+                setTimeout(() => {
+                    loadingIndicator.classList.add('opacity-0');
+                    loadingIndicator.style.transition = 'opacity 0.5s ease';
+                    setTimeout(() => {
+                        document.body.removeChild(loadingIndicator);
+                    }, 500);
+                }, 300);
+            } catch (error) {
+                console.error('数据加载失败:', error);
+                alert('数据加载失败，请刷新页面重试');
+            }
+        }
+        
+        // 初始化事件监听器
+        function initEventListeners() {
+            // 搜索功能
+            document.getElementById('searchBtn').addEventListener('click', performSearch);
+            document.getElementById('clearSearchBtn').addEventListener('click', clearSearch);
+            document.getElementById('searchInput').addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') performSearch();
+            });
+            
+            // 比较功能
+            document.getElementById('compareType').addEventListener('change', updateSuggestions);
+            document.getElementById('compareInput').addEventListener('input', updateSuggestions);
+            document.getElementById('compareInput').addEventListener('keydown', handleCompareInputKeydown);
+            document.getElementById('compareBtn').addEventListener('click', performComparison);
+            document.getElementById('clearCompareBtn').addEventListener('click', clearComparison);
+            
+            // 初始化建议列表
+            updateSuggestions();
+        }
+        
+        // 执行搜索
+        function performSearch() {
+            const searchType = document.getElementById('searchType').value;
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+            
+            if (!searchTerm) {
+                alert('请输入搜索内容');
+                return;
+            }
+            
+            // 显示结果区域和加载状态
+            document.getElementById('resultsArea').classList.remove('hidden');
+            showLoading();
+            hideEmptyState();
+            
+            // 模拟搜索延迟以显示加载状态
+            setTimeout(() => {
+                // 根据搜索类型筛选数据
+                if (searchType === 'bacteria') {
+                    searchByBacteria(searchTerm);
+                } else {
+                    searchByDrug(searchTerm);
+                }
+                hideLoading();
+            }, 300);
+        }
+        
+        // 按细菌搜索
+        function searchByBacteria(term) {
+            // 查找匹配的细菌
+            const matchedBacteria = antibioticData.data.filter(item => 
+                item.bacteria.toLowerCase().includes(term)
+            );
+            
+            displaySearchResults(matchedBacteria, 'bacteria');
+        }
+        
+        // 按药物搜索
+        function searchByDrug(term) {
+            // 查找包含该药物的细菌
+            const matchedBacteria = antibioticData.data.filter(item => {
+                return Object.entries(item.antibiotics).some(([drug, status]) => 
+                    drug.toLowerCase().includes(term) && status !== '不推荐'
+                );
+            });
+            
+            displaySearchResults(matchedBacteria, 'drug', term);
+        }
+        
+        // 显示搜索结果
+        function displaySearchResults(results, type, drugTerm = '') {
+            const resultsArea = document.getElementById('resultsArea');
+            const resultsTitle = document.getElementById('resultsTitle');
+            const resultsHeader = document.getElementById('resultsHeader');
+            const resultsBody = document.getElementById('resultsBody');
+            
+            // 清空之前的结果（保留加载和空状态行）
+            while (resultsHeader.firstChild) {
+                resultsHeader.removeChild(resultsHeader.firstChild);
+            }
+            
+            // 移除除了加载和空状态之外的行
+            const rowsToRemove = Array.from(resultsBody.children).filter(row => 
+                !row.id || !['loadingRow', 'emptyStateRow'].includes(row.id)
+            );
+            rowsToRemove.forEach(row => resultsBody.removeChild(row));
+            
+            if (results.length === 0) {
+                resultsTitle.textContent = '未找到匹配的结果';
+                showEmptyState();
+                return;
+            }
+            
+            hideEmptyState();
+            
+            if (type === 'bacteria') {
+                resultsTitle.textContent = '细菌敏感性结果';
+                
+                // 设置表头
+                const th1 = document.createElement('th');
+                th1.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                th1.textContent = '抗生素';
+                
+                const th2 = document.createElement('th');
+                th2.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                th2.textContent = '敏感性';
+                
+                resultsHeader.appendChild(th1);
+                resultsHeader.appendChild(th2);
+                
+                // 显示第一个匹配细菌的结果
+                const firstResult = results[0];
+                document.getElementById('resultsTitle').textContent = `细菌: ${firstResult.bacteria} 的敏感性结果`;
+                
+                // 添加结果行
+                Object.entries(firstResult.antibiotics).forEach(([drug, status]) => {
+                    if (status !== '不推荐') {
+                        const tr = document.createElement('tr');
+                        
+                        const td1 = document.createElement('td');
+                        td1.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900';
+                        td1.textContent = drug;
+                        
+                        const td2 = document.createElement('td');
+                        td2.className = 'px-6 py-4 whitespace-nowrap text-sm';
+                        
+                        // 根据敏感性设置颜色
+                        let statusClass = 'text-gray-700';
+                        if (status === '推荐') statusClass = 'text-green-600 font-medium';
+                        else if (status === '有活性') statusClass = 'text-blue-600';
+                        else if (status === '不确定') statusClass = 'text-yellow-600';
+                        
+                        td2.className += ' ' + statusClass;
+                        td2.textContent = status;
+                        
+                        tr.appendChild(td1);
+                        tr.appendChild(td2);
+                        resultsBody.appendChild(tr);
+                    }
+                });
+            } else {
+                resultsTitle.textContent = `对 ${drugTerm} 有敏感性的细菌`;
+                
+                // 设置表头
+                const th1 = document.createElement('th');
+                th1.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                th1.textContent = '细菌';
+                
+                const th2 = document.createElement('th');
+                th2.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                th2.textContent = '敏感性';
+                
+                resultsHeader.appendChild(th1);
+                resultsHeader.appendChild(th2);
+                
+                // 添加结果行
+                results.forEach(item => {
+                    const drugStatus = item.antibiotics[drugTerm];
+                    if (drugStatus && drugStatus !== '不推荐') {
+                        const tr = document.createElement('tr');
+                        
+                        const td1 = document.createElement('td');
+                        td1.className = 'px-6 py-4 text-sm text-gray-900';
+                        td1.textContent = item.bacteria;
+                        
+                        const td2 = document.createElement('td');
+                        td2.className = 'px-6 py-4 whitespace-nowrap text-sm';
+                        
+                        // 根据敏感性设置颜色
+                        let statusClass = 'text-gray-700';
+                        if (drugStatus === '推荐') statusClass = 'text-green-600 font-medium';
+                        else if (drugStatus === '有活性') statusClass = 'text-blue-600';
+                        else if (drugStatus === '不确定') statusClass = 'text-yellow-600';
+                        
+                        td2.className += ' ' + statusClass;
+                        td2.textContent = drugStatus;
+                        
+                        tr.appendChild(td1);
+                        tr.appendChild(td2);
+                        resultsBody.appendChild(tr);
+                    }
+                });
+            }
+            
+            resultsArea.classList.remove('hidden');
+        }
+        
+        // 清空搜索
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('resultsArea').classList.add('hidden');
+        }
+        
+        // 更新建议列表
+        function updateSuggestions() {
+            const compareType = document.getElementById('compareType').value;
+            const inputTerm = document.getElementById('compareInput').value.toLowerCase();
+            const suggestionsList = document.getElementById('suggestions');
+            
+            // 清空建议列表
+            suggestionsList.innerHTML = '';
+            
+            // 根据类型获取建议列表
+            const sourceList = compareType === 'bacteria' ? antibioticData.bacteria_list : antibioticData.drug_list;
+            
+            // 筛选匹配的建议
+            const filteredSuggestions = sourceList.filter(item => 
+                item.toLowerCase().includes(inputTerm)
+            );
+            
+            // 添加建议项
+            filteredSuggestions.slice(0, 10).forEach(item => {
+                const option = document.createElement('option');
+                option.value = item;
+                suggestionsList.appendChild(option);
+            });
+        }
+        
+        // 处理比较输入框的键盘事件
+        function handleCompareInputKeydown(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addComparisonItem();
+            }
+        }
+        
+        // 添加比较项目
+        function addComparisonItem() {
+            const compareType = document.getElementById('compareType').value;
+            const inputValue = document.getElementById('compareInput').value.trim();
+            
+            if (!inputValue) return;
+            
+            // 检查项目是否存在
+            const sourceList = compareType === 'bacteria' ? antibioticData.bacteria_list : antibioticData.drug_list;
+            const isValidItem = sourceList.includes(inputValue);
+            
+            if (!isValidItem) {
+                alert('请输入有效的项目名称');
+                return;
+            }
+            
+            // 检查是否已添加
+            if (selectedComparisonItems.includes(inputValue)) {
+                alert('该项目已添加');
+                return;
+            }
+            
+            // 添加到已选项目
+            selectedComparisonItems.push(inputValue);
+            updateSelectedItemsDisplay();
+            
+            // 清空输入框
+            document.getElementById('compareInput').value = '';
+        }
+        
+        // 更新已选项目显示
+        function updateSelectedItemsDisplay() {
+            const selectedItemsContainer = document.getElementById('selectedItems');
+            selectedItemsContainer.innerHTML = '';
+            
+            selectedComparisonItems.forEach((item, index) => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'inline-block bg-primary/10 text-primary px-3 py-1 rounded-md text-sm mr-2 mb-2 flex items-center';
+                
+                const itemText = document.createTextNode(item);
+                itemElement.appendChild(itemText);
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'ml-1 text-primary hover:text-red-500';
+                removeBtn.innerHTML = '<i class="fa fa-times"></i>';
+                removeBtn.addEventListener('click', () => {
+                    selectedComparisonItems.splice(index, 1);
+                    updateSelectedItemsDisplay();
+                });
+                
+                itemElement.appendChild(removeBtn);
+                selectedItemsContainer.appendChild(itemElement);
+            });
+            
+            // 更新比较按钮状态
+            document.getElementById('compareBtn').disabled = selectedComparisonItems.length < 2;
+        }
+        
+        // 执行比较
+        function performComparison() {
+            if (selectedComparisonItems.length < 2) {
+                alert('请至少选择2个项目进行比较');
+                return;
+            }
+            
+            // 显示结果区域和加载状态
+            document.getElementById('resultsArea').classList.remove('hidden');
+            showLoading();
+            hideEmptyState();
+            
+            // 模拟比较延迟以显示加载状态
+            setTimeout(() => {
+                const compareType = document.getElementById('compareType').value;
+                
+                if (compareType === 'bacteria') {
+                    compareBacteria();
+                } else {
+                    compareDrugs();
+                }
+                hideLoading();
+            }, 500);
+        }
+        
+        // 比较细菌
+        function compareBacteria() {
+            const resultsArea = document.getElementById('resultsArea');
+            const resultsTitle = document.getElementById('resultsTitle');
+            const resultsHeader = document.getElementById('resultsHeader');
+            const resultsBody = document.getElementById('resultsBody');
+            
+            // 清空之前的结果（保留加载和空状态行）
+            while (resultsHeader.firstChild) {
+                resultsHeader.removeChild(resultsHeader.firstChild);
+            }
+            
+            // 移除除了加载和空状态之外的行
+            const rowsToRemove = Array.from(resultsBody.children).filter(row => 
+                !row.id || !['loadingRow', 'emptyStateRow'].includes(row.id)
+            );
+            rowsToRemove.forEach(row => resultsBody.removeChild(row));
+            
+            resultsTitle.textContent = '细菌敏感性比较';
+            
+            // 设置表头
+            const th = document.createElement('th');
+            th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+            th.textContent = '抗生素';
+            resultsHeader.appendChild(th);
+            
+            // 为每个选中的细菌添加表头
+            selectedComparisonItems.forEach(bacteria => {
+                const th = document.createElement('th');
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                th.textContent = bacteria.split('\n')[0]; // 只显示中文名
+                resultsHeader.appendChild(th);
+            });
+            
+            // 获取所有相关抗生素
+            const allAntibiotics = new Set();
+            selectedComparisonItems.forEach(bacteria => {
+                const bacteriaData = antibioticData.data.find(item => item.bacteria === bacteria);
+                if (bacteriaData) {
+                    Object.keys(bacteriaData.antibiotics).forEach(antibiotic => {
+                        // 只添加在至少一个细菌中有活性的抗生素
+                        if (Object.values(selectedComparisonItems.reduce((acc, b) => {
+                            const data = antibioticData.data.find(item => item.bacteria === b);
+                            if (data && data.antibiotics[antibiotic] && data.antibiotics[antibiotic] !== '不推荐') {
+                                acc[b] = true;
+                            }
+                            return acc;
+                        }, {})).length > 0) {
+                            allAntibiotics.add(antibiotic);
+                        }
+                    });
+                }
+            });
+            
+            // 添加结果行
+            Array.from(allAntibiotics).sort().forEach(antibiotic => {
+                const tr = document.createElement('tr');
+                
+                const td1 = document.createElement('td');
+                td1.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900';
+                td1.textContent = antibiotic;
+                tr.appendChild(td1);
+                
+                // 为每个细菌添加结果
+                selectedComparisonItems.forEach(bacteria => {
+                    const td = document.createElement('td');
+                    td.className = 'px-6 py-4 whitespace-nowrap text-sm';
+                    
+                    const bacteriaData = antibioticData.data.find(item => item.bacteria === bacteria);
+                    const status = bacteriaData ? bacteriaData.antibiotics[antibiotic] : '无数据';
+                    
+                    // 根据敏感性设置颜色
+                    let statusClass = 'text-gray-400';
+                    if (status === '推荐') statusClass = 'text-green-600 font-medium';
+                    else if (status === '有活性') statusClass = 'text-blue-600';
+                    else if (status === '不确定') statusClass = 'text-yellow-600';
+                    else if (status === '不推荐') statusClass = 'text-red-400';
+                    
+                    td.className += ' ' + statusClass;
+                    td.textContent = status === undefined ? '无数据' : status;
+                    tr.appendChild(td);
+                });
+                
+                resultsBody.appendChild(tr);
+            });
+            
+            resultsArea.classList.remove('hidden');
+        }
+        
+        // 比较药物
+        function compareDrugs() {
+            const resultsArea = document.getElementById('resultsArea');
+            const resultsTitle = document.getElementById('resultsTitle');
+            const resultsHeader = document.getElementById('resultsHeader');
+            const resultsBody = document.getElementById('resultsBody');
+            
+            // 清空之前的结果（保留加载和空状态行）
+            while (resultsHeader.firstChild) {
+                resultsHeader.removeChild(resultsHeader.firstChild);
+            }
+            
+            // 移除除了加载和空状态之外的行
+            const rowsToRemove = Array.from(resultsBody.children).filter(row => 
+                !row.id || !['loadingRow', 'emptyStateRow'].includes(row.id)
+            );
+            rowsToRemove.forEach(row => resultsBody.removeChild(row));
+            
+            resultsTitle.textContent = '药物敏感性比较';
+            
+            // 设置表头
+            const th = document.createElement('th');
+            th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+            th.textContent = '细菌';
+            resultsHeader.appendChild(th);
+            
+            // 为每个选中的药物添加表头
+            selectedComparisonItems.forEach(drug => {
+                const th = document.createElement('th');
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                th.textContent = drug;
+                resultsHeader.appendChild(th);
+            });
+            
+            // 获取所有相关细菌
+            const allBacteria = new Set();
+            antibioticData.data.forEach(bacteriaData => {
+                // 检查该细菌是否对至少一个选中的药物有活性
+                const hasActiveDrug = selectedComparisonItems.some(drug => {
+                    const status = bacteriaData.antibiotics[drug];
+                    return status && status !== '不推荐';
+                });
+                
+                if (hasActiveDrug) {
+                    allBacteria.add(bacteriaData.bacteria);
+                }
+            });
+            
+            // 添加结果行
+            Array.from(allBacteria).sort().forEach(bacteria => {
+                const tr = document.createElement('tr');
+                
+                const td1 = document.createElement('td');
+                td1.className = 'px-6 py-4 text-sm text-gray-900';
+                td1.textContent = bacteria.split('\n')[0]; // 只显示中文名
+                tr.appendChild(td1);
+                
+                // 为每个药物添加结果
+                selectedComparisonItems.forEach(drug => {
+                    const td = document.createElement('td');
+                    td.className = 'px-6 py-4 whitespace-nowrap text-sm';
+                    
+                    const bacteriaData = antibioticData.data.find(item => item.bacteria === bacteria);
+                    const status = bacteriaData ? bacteriaData.antibiotics[drug] : '无数据';
+                    
+                    // 根据敏感性设置颜色
+                    let statusClass = 'text-gray-400';
+                    if (status === '推荐') statusClass = 'text-green-600 font-medium';
+                    else if (status === '有活性') statusClass = 'text-blue-600';
+                    else if (status === '不确定') statusClass = 'text-yellow-600';
+                    else if (status === '不推荐') statusClass = 'text-red-400';
+                    
+                    td.className += ' ' + statusClass;
+                    td.textContent = status === undefined ? '无数据' : status;
+                    tr.appendChild(td);
+                });
+                
+                resultsBody.appendChild(tr);
+            });
+            
+            resultsArea.classList.remove('hidden');
+        }
+        
+        // 清空比较
+        function clearComparison() {
+            selectedComparisonItems = [];
+            document.getElementById('compareInput').value = '';
+            updateSelectedItemsDisplay();
+        }
+        
+        // 页面加载时加载数据
+        window.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
