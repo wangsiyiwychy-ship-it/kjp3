@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>肾功能数据药物查询系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .back-to-home {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .back-to-home:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .back-to-home i {
+            margin-right: 8px;
+        }
+
+        .search-section {
+            padding: 40px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 20px 60px 20px 25px;
+            font-size: 18px;
+            border: 2px solid #e9ecef;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .search-input:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4facfe;
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #3d8bfe;
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .autocomplete-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #f8f9fa;
+            transition: background 0.2s ease;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.highlighted {
+            background: #f8f9fa;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .drug-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .drug-english-name {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .result-section {
+            padding: 30px;
+            display: none;
+        }
+
+        .drug-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #4facfe;
+        }
+
+        .drug-title {
+            color: #333;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .drug-subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .info-content {
+            color: #555;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-results img {
+            width: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .search-tips {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .search-tips h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .search-tips ul {
+            color: #555;
+            padding-left: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .search-section {
+                padding: 30px 20px;
+            }
+            
+            .search-input {
+                font-size: 16px;
+                padding: 15px 50px 15px 20px;
+            }
+            
+            .search-btn {
+                width: 38px;
+                height: 38px;
+            }
+            
+            .result-section {
+                padding: 20px;
+            }
+            
+            .drug-card {
+                padding: 20px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-to-home">
+                <i class="fa fa-home"></i>返回主页
+            </a>
+            <h1>🩺 肾功能数据药物查询系统</h1>
+            <p>专业药物查询，支持中英文搜索，了解肾功能对药物使用的影响</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input" placeholder="请输入药物中文名或英文名进行搜索..." autocomplete="off">
+                <button class="search-btn" onclick="performSearch()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </button>
+                <div id="autocompleteDropdown" class="autocomplete-dropdown"></div>
+            </div>
+
+            <div class="search-tips">
+                <h3>💡 搜索提示</h3>
+                <ul>
+                    <li>支持中文药物名称搜索（如：阿莫西林、青霉素）</li>
+                    <li>支持英文药物名称搜索（如：Amoxicillin、Penicillin）</li>
+                    <li>输入关键词即可获得相关建议</li>
+                    <li>点击搜索结果或按回车键查看详细信息</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="resultSection" class="result-section">
+            <!-- 搜索结果将在这里显示 -->
+        </div>
+    </div>
+
+    <script>
+        let drugsData = [];
+        let autocompleteTimeout;
+
+        // 加载药物数据
+        async function loadDrugsData() {
+            try {
+                const response = await fetch('./drugs_data.json');
+                drugsData = await response.json();
+                console.log('药物数据加载成功，共', drugsData.length, '种药物');
+            } catch (error) {
+                console.error('加载药物数据失败:', error);
+                // 如果无法加载JSON文件，使用内嵌数据
+                loadEmbeddedData();
+            }
+        }
+
+        // 内嵌数据作为备用方案
+        function loadEmbeddedData() {
+            drugsData = [
+                {
+                    "chinese_name": "苄青霉素",
+                    "english_name": "Benzylpenicillin (Penicillin G)",
+                    "clinical_application": "抗菌药",
+                    "normal_dosage": "每日 2.4～ 14.4g ，分 4～ 6 次应用",
+                    "pharmacokinetics": "分子量（Da） 334.4\n蛋白结合率（%） 60\n尿中原型药排泄率（%） 60~90\n分布容积（L/kg） 0.3~0.42\n半衰期（h）：正常/ESRF 0.5/10",
+                    "drug_metabolism": "苄青霉素在体内很少代谢，在尿液中可发现青霉噻唑酸衍生物（penicilloic acid derivative）。苄青霉素能迅速从尿液排泄；口服剂量的 20% 以药物原型从尿液排泄；肌内注射剂量的 60% ～ 90% 经肾清除，多数在1小时内完成，其中 10% 通过肾小球滤过， 90% 通过肾小管分泌。肾功能正常时，很少部分经胆汁排泄，而肾功能受损时，胆汁中的浓度明显升高。丙磺舒（probenecid）可抑制肾小管的分泌，进而增加苄青霉素的血药浓度，延长半衰期",
+                    "impaired_kidney_function_dosage": "20～ 50 与肾功能正常时同剂量\n10～ 20 0.6～ 2.4g ，每6小时1次，取决于感染严重程度[1]\n<10 0.6～ 1.2g ，每6小时1次，取决于感染严重程度[1]",
+                    "renal_replacement_therapy_dosage": "APD/CAPD 透析可清除。与GFR<10ml/min时同剂量\nHD 透析可清除。与GFR<10ml/min时同剂量\nHDF/HFD 透析可清除。与GFR<10ml/min时同剂量\nCAV/VVHD 透析可清除。与 GFR= 10～ 20ml / min 时同剂量",
+                    "important_drug_interactions": "与其他药物合用的潜在风险\n• 本药能减少氨甲蝶呤（methotrexate）的排泄",
+                    "usage": "溶液配制 静脉注射：600mg 溶于5ml 注射用水中\n静脉滴注：600mg 至少溶于 10ml 0.9% 氯化钠溶液中\n肌内注射：600mg 溶于1.6ml 注射用水中\n用法 静脉注射，静脉滴注，肌内注射\n输注速度 静脉注射：3~4分钟或以上静脉滴注：30~60分钟或以上\n注释 静脉给药剂量超过 1.2g 时，必须缓慢滴注，最小速度为 300mg / min",
+                    "other_information": "- 重度肾功能受损时的最大剂量：每日 4.8g\n- 600mg苄青霉素钠含1.68mmol钠（译者注：每1mg苄青霉素钠相当于1670单位青霉素）\n- 600mg苄青霉素钾含1.7mmol钾（译者注：每1mg苄青霉素钾相当于1598单位青霉素）\n- 肾功能受损时神经毒性发生率增加（癫痫发作）\n- 苄青霉素治疗可导致尿蛋白假阳性",
+                    "references": "[1] Foster P,Gordon F,Holloway S. Drug dosage adjustment during continuous renal replacement therapy. Br J Int Care. April 1996; 120-124."
+                },
+                {
+                    "chinese_name": "阿莫西林",
+                    "english_name": "Amoxicillin",
+                    "clinical_application": "抗菌药",
+                    "normal_dosage": "0.25～ 1g ，每8小时1次（最大剂量每日 6g ，治疗心内膜炎可达 12g ）",
+                    "pharmacokinetics": "分子量（Da） 365.4\n蛋白结合率（%） 20\n尿中原型药排泄率（%） 60\n分布容积（L/kg） 0.3\n半衰期（h）：正常/ESRF（1~1.5）/（7~20）",
+                    "drug_metabolism": "少部分阿莫西林能代谢成青霉噻唑酸（penicilloicacid），经尿液排泄。约 60% 的口服阿莫西林通过肾小球滤过和肾小管分泌后以原型从尿液排泄。丙磺舒（probenecid）可减少其肾排泄。有报道认为，本药在胆汁中的浓度高，并可能通过粪便排泄",
+                    "impaired_kidney_function_dosage": "20～ 50 与肾功能正常时同剂量\n10~20 与肾功能正常时同剂量\n<10 0.25～ 1g ，每8小时1次（心内膜炎时最大剂量为每日6g）",
+                    "renal_replacement_therapy_dosage": "APD/CAPD 不被透析清除。与 GFR<10ml/min 时同剂量\nHD 透析可清除。与GFR<10ml/min时同剂量\nHDF/HFD 透析可清除。与GFR<10ml/min时同剂量\nCAV/VVHD 透析可清除。与肾功能正常时同剂量",
+                    "important_drug_interactions": "与其他药物合用的潜在风险\n• 本药可减少氨甲蝶呤（methotrexate）\n的排泄，增加毒性风险",
+                    "usage": "溶液配制 静脉给药：0.25g药物溶于 5ml注射用水中\n肌内注射：0.25g 药物溶于\n1.5ml 注射用水中；0.5g 药\n物溶于 2.5ml 注射用水中；\n1g药物溶于 2.5ml 注射\n用水或 1% 灭菌利多卡因\n（lidocaine）中\n用法 口服，静脉给药，肌内注射\n输注速度 缓慢静脉注射，持续3~4分钟或以上\n静脉滴注，持续 30～ 60 分钟\n注释 静脉滴注：用 100ml5% 葡\n萄糖溶液或 0.9% 氯化钠溶液稀释后滴注\n静脉滴注溶液中药物的稳定\n性取决于稀释剂成分",
+                    "other_information": "- 每小瓶奥纳欣（amoxil）含钠 3.3mmol / g （译者注：奥纳欣是阿莫西林的别名）\n- 勿与氨基糖苷类（aminoglycosides）混合应用",
+                    "references": ""
+                }
+            ];
+        }
+
+        // 初始化应用
+        async function init() {
+            await loadDrugsData();
+            setupEventListeners();
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            const searchInput = document.getElementById('searchInput');
+            
+            searchInput.addEventListener('input', handleSearchInput);
+            searchInput.addEventListener('keydown', handleKeyDown);
+            searchInput.addEventListener('focus', showAutocomplete);
+            
+            // 点击其他地方关闭自动完成
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-container')) {
+                    hideAutocomplete();
+                }
+            });
+        }
+
+        // 处理搜索输入
+        function handleSearchInput(e) {
+            const query = e.target.value.trim();
+            
+            clearTimeout(autocompleteTimeout);
+            
+            if (query.length === 0) {
+                hideAutocomplete();
+                return;
+            }
+            
+            autocompleteTimeout = setTimeout(() => {
+                showAutocompleteSuggestions(query);
+            }, 300);
+        }
+
+        // 处理键盘事件
+        function handleKeyDown(e) {
+            const dropdown = document.getElementById('autocompleteDropdown');
+            const items = dropdown.querySelectorAll('.autocomplete-item');
+            const highlighted = dropdown.querySelector('.autocomplete-item.highlighted');
+            
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (highlighted) {
+                    highlighted.click();
+                } else {
+                    performSearch();
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!highlighted && items.length > 0) {
+                    items[0].classList.add('highlighted');
+                } else if (highlighted && highlighted.nextElementSibling) {
+                    highlighted.classList.remove('highlighted');
+                    highlighted.nextElementSibling.classList.add('highlighted');
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (highlighted && highlighted.previousElementSibling) {
+                    highlighted.classList.remove('highlighted');
+                    highlighted.previousElementSibling.classList.add('highlighted');
+                }
+            } else if (e.key === 'Escape') {
+                hideAutocomplete();
+            }
+        }
+
+        // 显示自动完成建议
+        function showAutocompleteSuggestions(query) {
+            const suggestions = searchDrugs(query, true); // 只返回建议
+            
+            if (suggestions.length === 0) {
+                hideAutocomplete();
+                return;
+            }
+            
+            const dropdown = document.getElementById('autocompleteDropdown');
+            dropdown.innerHTML = '';
+            
+            suggestions.slice(0, 8).forEach(drug => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.innerHTML = `
+                    <div class="drug-name">${drug.chinese_name}</div>
+                    <div class="drug-english-name">${drug.english_name}</div>
+                `;
+                item.onclick = () => selectDrug(drug);
+                dropdown.appendChild(item);
+            });
+            
+            dropdown.style.display = 'block';
+        }
+
+        // 显示自动完成
+        function showAutocomplete() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (query.length > 0) {
+                showAutocompleteSuggestions(query);
+            }
+        }
+
+        // 隐藏自动完成
+        function hideAutocomplete() {
+            const dropdown = document.getElementById('autocompleteDropdown');
+            dropdown.style.display = 'none';
+        }
+
+        // 选择药物
+        function selectDrug(drug) {
+            document.getElementById('searchInput').value = drug.chinese_name;
+            hideAutocomplete();
+            displayDrugResult(drug);
+        }
+
+        // 搜索药物
+        function searchDrugs(query, forSuggestion = false) {
+            if (!query) return [];
+            
+            const lowerQuery = query.toLowerCase();
+            const results = drugsData.filter(drug => {
+                const chineseName = (drug.chinese_name || '').toLowerCase();
+                const englishName = (drug.english_name || '').toLowerCase();
+                const clinicalApp = (drug.clinical_application || '').toLowerCase();
+                
+                return chineseName.includes(lowerQuery) || 
+                       englishName.includes(lowerQuery) || 
+                       clinicalApp.includes(lowerQuery);
+            });
+            
+            return forSuggestion ? results : results.slice(0, 20);
+        }
+
+        // 执行搜索
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query) return;
+            
+            const results = searchDrugs(query);
+            hideAutocomplete();
+            
+            if (results.length === 0) {
+                showNoResults();
+            } else if (results.length === 1) {
+                displayDrugResult(results[0]);
+            } else {
+                displayMultipleResults(results);
+            }
+        }
+
+        // 显示药物详细信息
+        function displayDrugResult(drug) {
+            const resultSection = document.getElementById('resultSection');
+            
+            const drugInfo = [
+                { label: '药物中文名', content: drug.chinese_name },
+                { label: '药物英文名', content: drug.english_name },
+                { label: '临床应用', content: drug.clinical_application },
+                { label: '肾功能正常时的剂量', content: drug.normal_dosage },
+                { label: '药代动力学', content: drug.pharmacokinetics },
+                { label: '药物代谢', content: drug.drug_metabolism },
+                { label: '肾功能受损时的剂量', content: drug.impaired_kidney_function_dosage },
+                { label: '肾脏替代治疗时的剂量', content: drug.renal_replacement_therapy_dosage },
+                { label: '重要的药物相互作用', content: drug.important_drug_interactions },
+                { label: '用法', content: drug.usage },
+                { label: '其他信息', content: drug.other_information },
+                { label: '参考文献', content: drug.references }
+            ];
+            
+            const infoGrid = drugInfo.map(info => `
+                <div class="info-item">
+                    <div class="info-label">${info.label}</div>
+                    <div class="info-content">${info.content || '暂无相关信息'}</div>
+                </div>
+            `).join('');
+            
+            resultSection.innerHTML = `
+                <div class="drug-card">
+                    <div class="drug-title">${drug.chinese_name || '未知药物'}</div>
+                    <div class="drug-subtitle">${drug.english_name || ''}</div>
+                    <div class="info-grid">
+                        ${infoGrid}
+                    </div>
+                </div>
+            `;
+            
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 显示多个搜索结果
+        function displayMultipleResults(results) {
+            const resultSection = document.getElementById('resultSection');
+            
+            const resultList = results.map(drug => `
+                <div class="drug-card" onclick="displayDrugResult(drugsData.find(d => d.chinese_name === '${drug.chinese_name}'))" style="cursor: pointer;">
+                    <div class="drug-title">${drug.chinese_name || '未知药物'}</div>
+                    <div class="drug-subtitle">${drug.english_name || ''}</div>
+                    <div class="info-content">临床应用：${drug.clinical_application || '暂无'}</div>
+                </div>
+            `).join('');
+            
+            resultSection.innerHTML = `
+                <h2 style="margin-bottom: 20px; color: #333;">搜索结果 (${results.length} 个药物)</h2>
+                ${resultList}
+            `;
+            
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 显示无结果
+        function showNoResults() {
+            const resultSection = document.getElementById('resultSection');
+            
+            resultSection.innerHTML = `
+                <div class="no-results">
+                    <div class="spinner"></div>
+                    <h3>未找到相关药物</h3>
+                    <p>请尝试使用其他关键词搜索</p>
+                </div>
+            `;
+            
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
