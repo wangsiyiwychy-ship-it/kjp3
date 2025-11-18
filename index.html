@@ -4,592 +4,203 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>医学药物查询系统</title>
-    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f9fafb;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.1);
         }
-
-        /* Header Styles */
-        .gradient-bg {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
-            color: white;
-            padding: 48px 16px;
-            text-align: center;
+        
+        .system-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
-
-        .gradient-bg h1 {
-            font-size: clamp(2rem, 6vw, 3.5rem);
-            font-weight: bold;
-            margin-bottom: 16px;
-        }
-
-        .gradient-bg h1 i {
-            margin-right: 12px;
-        }
-
-        .gradient-bg p {
-            font-size: clamp(1rem, 2.5vw, 1.4rem);
-            opacity: 0.9;
-        }
-
-        /* Main Content */
-        main {
-            padding: 48px 16px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 32px;
-        }
-
-        @media (min-width: 1024px) {
-            .grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        /* Card Styles */
-        .bg-white {
-            background-color: white;
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: all 0.5s;
-            height: 100%;
-        }
-
-        .bg-white:hover {
+        
+        .system-card:hover {
+            transform: translateY(-8px) scale(1.02);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            transform: translateY(-8px);
         }
-
-        .card-shadow {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        /* Icon Circles */
-        .antibiotic-gradient {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        }
-
-        .kidney-gradient {
-            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-        }
-
-        .w-20 {
-            width: 80px;
-        }
-
-        .h-20 {
-            height: 80px;
-        }
-
-        .mx-auto {
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .mb-4 {
-            margin-bottom: 16px;
-        }
-
-        .rounded-full {
-            border-radius: 50%;
-        }
-
-        .flex {
-            display: flex;
-        }
-
-        .items-center {
-            align-items: center;
-        }
-
-        .justify-center {
-            justify-content: center;
-        }
-
-        .text-white {
-            color: white;
-        }
-
-        .text-3xl {
-            font-size: 1.875rem;
-        }
-
-        /* Text Styles */
-        .text-center {
-            text-align: center;
-        }
-
-        .mb-6 {
-            margin-bottom: 24px;
-        }
-
-        .h2 {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #1f2937;
-            margin-bottom: 8px;
-        }
-
-        .text-gray-800 {
-            color: #1f2937;
-        }
-
-        .text-gray-600 {
-            color: #4b5563;
-        }
-
-        .text-sm {
-            font-size: 0.875rem;
-        }
-
-        .leading-relaxed {
-            line-height: 1.625;
-        }
-
-        /* Check Items */
-        .space-y-4 > * + * {
-            margin-top: 16px;
-        }
-
-        .flex {
-            display: flex;
-        }
-
-        .items-center {
-            align-items: center;
-        }
-
-        .mr-2 {
-            margin-right: 8px;
-        }
-
-        .text-antibiotic {
-            color: #3b82f6;
-        }
-
-        .text-kidney {
-            color: #10b981;
-        }
-
-        /* Buttons */
-        .w-full {
+        
+        .system-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
             width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
         }
-
-        .py-4 {
-            padding-top: 16px;
-            padding-bottom: 16px;
+        
+        .system-card:hover::before {
+            left: 100%;
         }
-
-        .bg-antibiotic {
-            background-color: #3b82f6;
+        
+        .feature-item {
+            transition: all 0.3s ease;
         }
-
-        .bg-kidney {
-            background-color: #10b981;
+        
+        .feature-item:hover {
+            transform: translateX(10px);
+            background: rgba(255, 255, 255, 0.1);
         }
-
-        .text-white {
-            color: white;
+        
+        .icon-bg {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
-
-        .rounded-xl {
-            border-radius: 0.75rem;
+        
+        .feature-icon-bg {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
         }
-
-        .hover\:bg-blue-600:hover {
-            background-color: #2563eb;
+        
+        .header-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-
-        .hover\:bg-green-600:hover {
-            background-color: #059669;
-        }
-
-        .transition-all {
-            transition: all 0.3s;
-        }
-
-        .duration-300 {
-            transition-duration: 0.3s;
-        }
-
-        .flex {
-            display: flex;
-        }
-
-        .items-center {
-            align-items: center;
-        }
-
-        .justify-center {
-            justify-content: center;
-        }
-
-        .font-semibold {
-            font-weight: 600;
-        }
-
-        .text-lg {
-            font-size: 1.125rem;
-        }
-
-        .transform {
-            transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-        }
-
-        .hover\:scale-105:hover {
-            --tw-scale-x: 1.05;
-            --tw-scale-y: 1.05;
-        }
-
-        .block {
-            display: block;
-        }
-
-        /* System Features Section */
-        .mt-16 {
-            margin-top: 64px;
-        }
-
-        .bg-white {
-            background-color: white;
-        }
-
-        .rounded-2xl {
-            border-radius: 1rem;
-        }
-
-        .p-8 {
-            padding: 32px;
-        }
-
-        .text-3xl {
-            font-size: 1.875rem;
-        }
-
-        .font-bold {
-            font-weight: 700;
-        }
-
-        .text-yellow-400 {
-            color: #fbbf24;
-        }
-
-        .mr-2 {
-            margin-right: 8px;
-        }
-
-        .mb-8 {
-            margin-bottom: 32px;
-        }
-
-        .md\:grid-cols-3 {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
-        .gap-8 {
-            gap: 32px;
-        }
-
-        .md\:grid-cols-3 > * {
-            text-align: center;
-        }
-
-        .w-16 {
-            width: 64px;
-        }
-
-        .h-16 {
-            height: 64px;
-        }
-
-        .mb-4 {
-            margin-bottom: 16px;
-        }
-
-        .rounded-full {
-            border-radius: 50%;
-        }
-
-        .bg-blue-100 {
-            background-color: #dbeafe;
-        }
-
-        .text-blue-600 {
-            color: #2563eb;
-        }
-
-        .text-2xl {
-            font-size: 1.5rem;
-        }
-
-        .bg-green-100 {
-            background-color: #dcfce7;
-        }
-
-        .text-green-600 {
-            color: #16a34a;
-        }
-
-        .bg-purple-100 {
-            background-color: #f3e8ff;
-        }
-
-        .text-purple-600 {
-            color: #9333ea;
-        }
-
-        .text-xl {
-            font-size: 1.25rem;
-        }
-
-        .font-semibold {
-            font-weight: 600;
-        }
-
-        .mb-2 {
-            margin-bottom: 8px;
-        }
-
-        .text-gray-800 {
-            color: #1f2937;
-        }
-
-        .text-gray-600 {
-            color: #4b5563;
-        }
-
-        /* Tips Section */
-        .mt-12 {
-            margin-top: 48px;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .bg-gradient-to-r {
-            background: linear-gradient(to right, var(--tw-gradient-stops));
-        }
-
-        .from-blue-50 {
-            --tw-gradient-from: #eff6ff;
-        }
-
-        .to-green-50 {
-            --tw-gradient-to: #f0fdf4;
-        }
-
-        .rounded-2xl {
-            border-radius: 1rem;
-        }
-
-        .p-6 {
-            padding: 24px;
-        }
-
-        .text-xl {
-            font-size: 1.25rem;
-        }
-
-        .font-semibold {
-            font-weight: 600;
-        }
-
-        .text-gray-800 {
-            color: #1f2937;
-        }
-
-        .mb-3 {
-            margin-bottom: 12px;
-        }
-
-        .text-yellow-500 {
-            color: #eab308;
-        }
-
-        .mr-2 {
-            margin-right: 8px;
-        }
-
-        .text-gray-700 {
-            color: #374151;
-        }
-
-        .leading-relaxed {
-            line-height: 1.625;
-        }
-
-        .strong {
-            font-weight: 600;
-        }
-
-        /* Responsive Design */
-        @media (min-width: 768px) {
-            .md\:grid-cols-3 {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .system-card {
+                margin-bottom: 1.5rem;
             }
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- 头部区域 -->
-    <header class="gradient-bg text-white py-12 px-4">
-        <div class="container mx-auto text-center">
-            <h1 class="text-[clamp(2rem,6vw,3.5rem)] font-bold mb-4">
-                <i class="fa fa-hospital-o mr-3"></i>医学药物查询系统
+<body>
+    <div class="container mx-auto px-4 py-8 min-h-screen flex flex-col">
+        <!-- 头部标题 -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                <i class="fas fa-heartbeat mr-4"></i>
+                医学药物查询系统
             </h1>
-            <p class="text-[clamp(1rem,2.5vw,1.4rem)] opacity-90">
-                专业的医学药物信息查询平台，为临床决策提供科学依据
+            <p class="text-xl text-white/80 max-w-2xl mx-auto">
+                集成抗菌谱查询与肾脏药物剂量调整的专业医疗辅助工具
             </p>
-        </div>
-    </header>
+        </header>
 
-    <!-- 主要内容区域 -->
-    <main class="container mx-auto px-4 py-12">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- 抗菌谱查询系统 -->
-            <div class="group">
-                <div class="bg-white rounded-2xl p-8 card-shadow transition-all duration-500 hover:shadow-2xl transform hover:-translate-y-2 h-full">
-                    <div class="text-center mb-6">
-                        <div class="w-20 h-20 mx-auto mb-4 rounded-full antibiotic-gradient flex items-center justify-center">
-                            <i class="fa fa-flask text-white text-3xl"></i>
-                        </div>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-2">抗菌谱查询比较系统</h2>
-                        <p class="text-gray-600 leading-relaxed">
-                            基于《53版热病》抗菌谱数据，快速查询细菌与药物敏感性信息，支持多药物比较分析
-                        </p>
+        <!-- 主界面系统选择 -->
+        <main id="mainInterface" class="flex-1">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                <!-- 抗菌谱查询系统卡片 -->
+                <div class="system-card glass-card rounded-2xl p-8 text-center cursor-pointer" onclick="window.location.href='kangjunpu.html'">
+                    <div class="icon-bg w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-microscope text-white text-3xl"></i>
                     </div>
-                    
-                    <div class="space-y-4 mb-6">
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fa fa-check-circle text-antibiotic mr-2"></i>
-                            <span>细菌名称搜索查询</span>
-                        </div>
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fa fa-check-circle text-antibiotic mr-2"></i>
-                            <span>药物名称搜索查询</span>
-                        </div>
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fa fa-check-circle text-antibiotic mr-2"></i>
-                            <span>多药物抗菌谱比较</span>
-                        </div>
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fa fa-check-circle text-antibiotic mr-2"></i>
-                            <span>详细的敏感性数据</span>
-                        </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-search-plus mr-2"></i>
+                        抗菌谱查询比较系统
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        专业的细菌敏感性分析工具，支持细菌和药物双向查询，提供抗菌药物敏感性比较分析
+                    </p>
+                    <div class="inline-flex items-center px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-arrow-right mr-2"></i>
+                        进入系统
                     </div>
-                    
-                    <a href="kangjunpu.html" class="block w-full">
-                        <button class="w-full py-4 bg-antibiotic text-white rounded-xl hover:bg-blue-600 transition-all duration-300 flex items-center justify-center font-semibold text-lg transform hover:scale-105">
-                            <i class="fa fa-search mr-2"></i>
-                            进入抗菌谱查询系统
-                        </button>
-                    </a>
+                </div>
+
+                <!-- 肾脏药物查询系统卡片 -->
+                <div class="system-card glass-card rounded-2xl p-8 text-center cursor-pointer" onclick="window.location.href='drug_inquiry_system.html'">
+                    <div class="icon-bg w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-pills text-white text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-calculator mr-2"></i>
+                        肾脏药物查询系统
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        肾功能不全患者的用药指导系统，提供药物剂量调整建议和药代动力学参数查询
+                    </p>
+                    <div class="inline-flex items-center px-6 py-3 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors">
+                        <i class="fas fa-arrow-right mr-2"></i>
+                        进入系统
+                    </div>
                 </div>
             </div>
 
-            <!-- 肾脏药物查询系统 -->
-            <div class="group">
-                <div class="bg-white rounded-2xl p-8 card-shadow transition-all duration-500 hover:shadow-2xl transform hover:-translate-y-2 h-full">
-                    <div class="text-center mb-6">
-                        <div class="w-20 h-20 mx-auto mb-4 rounded-full kidney-gradient flex items-center justify-center">
-                            <i class="fa fa-kidneys text-white text-3xl"></i>
-                        </div>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-2">肾脏药物查询系统</h2>
-                        <p class="text-gray-600 leading-relaxed">
-                            专为肾功能不全患者设计的药物使用指导，提供剂量调整和用药安全建议
-                        </p>
-                    </div>
-                    
-                    <div class="space-y-4 mb-6">
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fa fa-check-circle text-kidney mr-2"></i>
-                            <span>药物基本信息查询</span>
-                        </div>
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fa fa-check-circle text-kidney mr-2"></i>
-                            <span>肾功能不全剂量调整</span>
-                        </div>
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fa fa-check-circle text-kidney mr-2"></i>
-                            <span>透析患者用药指导</span>
-                        </div>
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fa fa-check-circle text-kidney mr-2"></i>
-                            <span>药物相互作用提醒</span>
-                        </div>
-                    </div>
-                    
-                    <a href="drug_inquiry_system.html" class="block w-full">
-                        <button class="w-full py-4 bg-kidney text-white rounded-xl hover:bg-green-600 transition-all duration-300 flex items-center justify-center font-semibold text-lg transform hover:scale-105">
-                            <i class="fa fa-pills mr-2"></i>
-                            进入肾脏药物查询系统
-                        </button>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- 系统特色介绍 -->
-        <div class="mt-16">
-            <div class="bg-white rounded-2xl p-8 card-shadow">
+            <!-- 系统特色介绍 -->
+            <section class="glass-card rounded-2xl p-8">
                 <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">
-                    <i class="fa fa-star text-yellow-400 mr-2"></i>系统特色
+                    <i class="fas fa-star mr-3"></i>
+                    系统特色
                 </h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="text-center">
-                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
-                            <i class="fa fa-database text-blue-600 text-2xl"></i>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="feature-item rounded-xl p-6 text-center">
+                        <div class="feature-icon-bg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-database text-white text-2xl"></i>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">权威数据源</h3>
-                        <p class="text-gray-600">
-                            基于《53版热病》、《The Renal Drug Handbook，The Ultimate Prescribing Guide for Renal Practitioners,5th Edition》等权威医学文献，确保信息准确可靠
-                        </p>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">专业数据库</h4>
+                        <p class="text-gray-600 text-sm">权威的药物数据库，包含最新的抗菌谱和药物动力学数据</p>
                     </div>
                     
-                    <div class="text-center">
-                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-                            <i class="fa fa-mobile text-green-600 text-2xl"></i>
+                    <div class="feature-item rounded-xl p-6 text-center">
+                        <div class="feature-icon-bg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-search text-white text-2xl"></i>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">响应式设计</h3>
-                        <p class="text-gray-600">
-                            支持各种设备访问，无论电脑、平板还是手机都能完美显示
-                        </p>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">智能搜索</h4>
+                        <p class="text-gray-600 text-sm">支持多种搜索模式，自动补全和模糊匹配功能</p>
                     </div>
                     
-                    <div class="text-center">
-                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-100 flex items-center justify-center">
-                            <i class="fa fa-bolt text-purple-600 text-2xl"></i>
+                    <div class="feature-item rounded-xl p-6 text-center">
+                        <div class="feature-icon-bg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-chart-bar text-white text-2xl"></i>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">快速查询</h3>
-                        <p class="text-gray-600">
-                            优化的搜索算法，毫秒级响应，让查询更高效便捷
-                        </p>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">数据比较</h4>
+                        <p class="text-gray-600 text-sm">多药物、多细菌的敏感性比较分析功能</p>
+                    </div>
+                    
+                    <div class="feature-item rounded-xl p-6 text-center">
+                        <div class="feature-icon-bg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-calculator text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">剂量计算</h4>
+                        <p class="text-gray-600 text-sm">根据肾功能状态自动计算个体化用药剂量</p>
+                    </div>
+                    
+                    <div class="feature-item rounded-xl p-6 text-center">
+                        <div class="feature-icon-bg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-mobile-alt text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">响应式设计</h4>
+                        <p class="text-gray-600 text-sm">适配手机、平板、电脑等多种设备，随时随地查询</p>
+                    </div>
+                    
+                    <div class="feature-item rounded-xl p-6 text-center">
+                        <div class="feature-icon-bg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-shield-alt text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">数据安全</h4>
+                        <p class="text-gray-600 text-sm">本地数据存储，保护患者隐私信息</p>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
+    </div>
 
-    </main>
+    <script>
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('医学药物查询系统已加载');
+        });
+    </script>
 </body>
 </html>
