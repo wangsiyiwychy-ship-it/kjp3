@@ -543,6 +543,42 @@
             font-size: 0.875rem;
         }
 
+        /* Status Filter Styles */
+        .status-filter-btn {
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .status-filter-btn.active {
+            background-color: #6366f1;
+            color: white;
+            border-color: #6366f1;
+        }
+
+        .status-filter-btn:hover:not(.active) {
+            background-color: #f3f4f6;
+        }
+
+        .status-filter-btn .bg-green-100 {
+            background-color: #dcfce7;
+        }
+
+        .status-filter-btn .bg-blue-100 {
+            background-color: #dbeafe;
+        }
+
+        .status-filter-btn .bg-yellow-100 {
+            background-color: #fef3c7;
+        }
+
+        .status-filter-btn .bg-red-100 {
+            background-color: #fee2e2;
+        }
+
+        .status-filter-btn .bg-gray-100 {
+            background-color: #f3f4f6;
+        }
+
         /* Footer */
         footer {
             background-color: #1f2937;
@@ -765,7 +801,31 @@
         <!-- 结果显示区域 -->
         <div id="resultsArea" class="mt-8 hidden">
             <div class="bg-white rounded-xl p-6 card-shadow transition-all duration-300 hover:shadow-lg">
-                <h2 id="resultsTitle" class="text-xl font-bold mb-4 text-gray-800"></h2>
+                <div class="flex flex-wrap items-center justify-between mb-4">
+                    <h2 id="resultsTitle" class="text-xl font-bold text-gray-800"></h2>
+                    
+                    <!-- 活性状态筛选按钮组 -->
+                    <div id="statusFilter" class="flex flex-wrap gap-2">
+                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200 active" data-status="all">
+                            全部显示
+                        </button>
+                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200" data-status="推荐">
+                            <span class="inline-block w-3 h-3 rounded-full bg-green-100 mr-1"></span>推荐
+                        </button>
+                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200" data-status="有活性">
+                            <span class="inline-block w-3 h-3 rounded-full bg-blue-100 mr-1"></span>有活性
+                        </button>
+                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200" data-status="不确定">
+                            <span class="inline-block w-3 h-3 rounded-full bg-yellow-100 mr-1"></span>不确定
+                        </button>
+                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200" data-status="不推荐">
+                            <span class="inline-block w-3 h-3 rounded-full bg-red-100 mr-1"></span>不推荐
+                        </button>
+                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200" data-status="无数据">
+                            <span class="inline-block w-3 h-3 rounded-full bg-gray-100 mr-1"></span>无数据
+                        </button>
+                    </div>
+                </div>
                 <div id="resultsContent" class="overflow-x-auto rounded-lg border border-gray-200">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -1078,6 +1138,7 @@
                 displayDrugs.forEach(drug => {
                     const status = firstResult.antibiotics[drug] || '无数据';
                     const tr = document.createElement('tr');
+                    tr.dataset.status = status;
                     
                     tr.appendChild(createCell(drug, 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'));
                     tr.appendChild(createCell(status, `px-6 py-2 whitespace-nowrap text-sm rounded ${getStatusClass(status)}`));
@@ -1122,6 +1183,50 @@
             }
             
             resultsArea.classList.remove('hidden');
+            
+            // 初始化状态筛选
+            initStatusFilter();
+        }
+
+        // 初始化状态筛选功能
+        function initStatusFilter() {
+            const filterButtons = document.querySelectorAll('.status-filter-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 移除其他按钮的活动状态
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    // 添加当前按钮的活动状态
+                    this.classList.add('active');
+                    
+                    // 获取筛选状态
+                    const filterStatus = this.dataset.status;
+                    applyStatusFilter(filterStatus);
+                });
+            });
+        }
+
+        // 应用状态筛选
+        function applyStatusFilter(filterStatus) {
+            const rows = document.querySelectorAll('#resultsBody tr:not(#loadingRow):not(#emptyStateRow)');
+            
+            rows.forEach(row => {
+                if (filterStatus === 'all') {
+                    row.style.display = '';
+                } else {
+                    // 检查行中是否有匹配状态的单元格
+                    const cells = row.querySelectorAll('td');
+                    let hasMatchingStatus = false;
+                    
+                    cells.forEach(cell => {
+                        const className = cell.className;
+                        if (className.includes(getStatusClass(filterStatus).split(' ')[0])) {
+                            hasMatchingStatus = true;
+                        }
+                    });
+                    
+                    row.style.display = hasMatchingStatus ? '' : 'none';
+                }
+            });
         }
         
         // 清空搜索
