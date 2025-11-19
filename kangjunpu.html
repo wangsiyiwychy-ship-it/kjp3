@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>抗菌谱查询系统</title>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * {
             margin: 0;
@@ -805,24 +806,84 @@
                     <h2 id="resultsTitle" class="text-xl font-bold text-gray-800"></h2>
                     
                     <!-- 活性状态筛选按钮组 -->
-                    <div id="statusFilter" class="flex flex-wrap gap-2">
-                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200 active" data-status="all">
-                            全部显示
+                    <div id="statusFilter" class="flex flex-wrap gap-3">
+                        <button class="status-filter-btn group relative overflow-hidden bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700 rounded-2xl px-4 py-2 text-sm font-black text-white hover:text-white transition-all duration-300 transform hover:scale-110 hover:shadow-2xl hover:rotate-1 shadow-xl active" data-status="all">
+                            <span class="absolute inset-0 bg-gradient-to-r from-blue-300/30 to-indigo-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+                             <div class="absolute inset-0 ring-2 ring-indigo-300/50 ring-offset-2 ring-offset-white rounded-2xl"></div>
+                            <span class="relative z-10 flex items-center">
+                                <div class="w-5 h-5 mr-3 bg-white/25 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 11-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <span class="tracking-wide drop-shadow-sm">全部显示</span>
+                            </span>
                         </button>
-                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200" data-status="推荐">
-                            <span class="inline-block w-3 h-3 rounded-full bg-green-100 mr-1"></span>推荐
+                        <button class="status-filter-btn group relative overflow-hidden bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-2xl px-4 py-2 text-sm font-black text-white hover:text-white transition-all duration-300 transform hover:scale-110 hover:shadow-2xl hover:rotate-1 shadow-xl" data-status="推荐">
+                            <span class="absolute inset-0 bg-gradient-to-r from-sky-300/30 to-blue-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+                             <div class="absolute inset-0 ring-2 ring-blue-300/50 ring-offset-2 ring-offset-white rounded-2xl"></div>
+                            <span class="relative z-10 flex items-center">
+                                <div class="relative flex items-center justify-center w-5 h-5 mr-3">
+                                    <span class="absolute w-6 h-6 bg-white/30 rounded-full animate-ping"></span>
+                                    <span class="relative w-4 h-4 bg-white rounded-full"></span>
+                                    <div class="absolute inset-0 rounded-full border-2 border-white/60"></div>
+                                </div>
+                                <span class="tracking-wide drop-shadow-sm">推荐</span>
+                            </span>
                         </button>
-                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200" data-status="有活性">
-                            <span class="inline-block w-3 h-3 rounded-full bg-blue-100 mr-1"></span>有活性
+                        <button class="status-filter-btn group relative overflow-hidden bg-gradient-to-br from-sky-400 via-sky-500 to-sky-600 rounded-2xl px-4 py-2 text-sm font-black text-white hover:text-white transition-all duration-300 transform hover:scale-110 hover:shadow-2xl hover:rotate-1 shadow-xl" data-status="有活性">
+                            <span class="absolute inset-0 bg-gradient-to-r from-cyan-300/30 to-sky-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+                             <div class="absolute inset-0 ring-2 ring-sky-300/50 ring-offset-2 ring-offset-white rounded-2xl"></div>
+                            <span class="relative z-10 flex items-center">
+                                <div class="relative flex items-center justify-center w-5 h-5 mr-3">
+                                    <span class="absolute w-6 h-6 bg-white/30 rounded-full animate-ping"></span>
+                                    <span class="relative w-4 h-4 bg-white rounded-full"></span>
+                                    <div class="absolute inset-0 rounded-full border-2 border-white/60"></div>
+                                </div>
+                                <span class="tracking-wide drop-shadow-sm">有活性</span>
+                            </span>
                         </button>
-                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200" data-status="不确定">
-                            <span class="inline-block w-3 h-3 rounded-full bg-yellow-100 mr-1"></span>不确定
+                        <button class="status-filter-btn group relative overflow-hidden bg-gradient-to-br from-cyan-400 via-cyan-500 to-cyan-600 rounded-2xl px-4 py-2 text-sm font-black text-white hover:text-white transition-all duration-300 transform hover:scale-110 hover:shadow-2xl hover:rotate-1 shadow-xl" data-status="不确定">
+                            <span class="absolute inset-0 bg-gradient-to-r from-teal-300/30 to-cyan-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+                             <div class="absolute inset-0 ring-2 ring-cyan-300/50 ring-offset-2 ring-offset-white rounded-2xl"></div>
+                            <span class="relative z-10 flex items-center">
+                                <div class="relative flex items-center justify-center w-5 h-5 mr-3">
+                                    <span class="absolute w-6 h-6 bg-white/30 rounded-full animate-ping"></span>
+                                    <span class="relative w-4 h-4 bg-white rounded-full"></span>
+                                    <div class="absolute inset-0 rounded-full border-2 border-white/60"></div>
+                                </div>
+                                <span class="tracking-wide drop-shadow-sm">不确定</span>
+                            </span>
                         </button>
-                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200" data-status="不推荐">
-                            <span class="inline-block w-3 h-3 rounded-full bg-red-100 mr-1"></span>不推荐
+                        <button class="status-filter-btn group relative overflow-hidden bg-gradient-to-br from-violet-500 via-violet-600 to-indigo-700 rounded-2xl px-4 py-2 text-sm font-black text-white hover:text-white transition-all duration-300 transform hover:scale-110 hover:shadow-2xl hover:rotate-1 shadow-xl" data-status="不推荐">
+                            <span class="absolute inset-0 bg-gradient-to-r from-indigo-300/30 to-violet-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+                             <div class="absolute inset-0 ring-2 ring-violet-300/50 ring-offset-2 ring-offset-white rounded-2xl"></div>
+                            <span class="relative z-10 flex items-center">
+                                <div class="relative flex items-center justify-center w-5 h-5 mr-3">
+                                    <span class="absolute w-6 h-6 bg-white/30 rounded-full animate-ping"></span>
+                                    <span class="relative w-4 h-4 bg-white rounded-full"></span>
+                                    <div class="absolute inset-0 rounded-full border-2 border-white/60"></div>
+                                </div>
+                                <span class="tracking-wide drop-shadow-sm">不推荐</span>
+                            </span>
                         </button>
-                        <button class="status-filter-btn px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all duration-200" data-status="无数据">
-                            <span class="inline-block w-3 h-3 rounded-full bg-gray-100 mr-1"></span>无数据
+                        <button class="status-filter-btn group relative overflow-hidden bg-gradient-to-br from-emerald-500 via-teal-600 to-teal-700 rounded-2xl px-4 py-2 text-sm font-black text-white hover:text-white transition-all duration-300 transform hover:scale-110 hover:shadow-2xl hover:rotate-1 shadow-xl" data-status="无数据">
+                            <span class="absolute inset-0 bg-gradient-to-r from-teal-300/30 to-emerald-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+                             <div class="absolute inset-0 ring-2 ring-emerald-300/50 ring-offset-2 ring-offset-white rounded-2xl"></div>
+                            <span class="relative z-10 flex items-center">
+                                <div class="relative flex items-center justify-center w-5 h-5 mr-3">
+                                    <span class="absolute w-6 h-6 bg-white/30 rounded-full animate-ping"></span>
+                                    <span class="relative w-4 h-4 bg-white rounded-full"></span>
+                                    <div class="absolute inset-0 rounded-full border-2 border-white/60"></div>
+                                </div>
+                                <span class="tracking-wide drop-shadow-sm">无数据</span>
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -1184,6 +1245,9 @@
             
             resultsArea.classList.remove('hidden');
             
+            // 自动滚动到结果区域
+            resultsArea.scrollIntoView({ behavior: 'smooth' });
+            
             // 初始化状态筛选
             initStatusFilter();
         }
@@ -1526,6 +1590,9 @@
             });
             
             resultsArea.classList.remove('hidden');
+            
+            // 自动滚动到结果区域
+            resultsArea.scrollIntoView({ behavior: 'smooth' });
         }
         
         // 比较药物（智能过滤）
@@ -1598,6 +1665,9 @@
             console.log(`比较功能显示 ${targetMicrobes.length} 个${microbeType}`);
             
             resultsArea.classList.remove('hidden');
+            
+            // 自动滚动到结果区域
+            resultsArea.scrollIntoView({ behavior: 'smooth' });
         }
         
         // 清空比较
