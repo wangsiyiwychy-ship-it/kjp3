@@ -197,6 +197,55 @@
             margin-top: 16px;
         }
 
+        /* Status Background Colors */
+        .bg-green-100 {
+            background-color: #dcfce7;
+        }
+
+        .bg-blue-100 {
+            background-color: #dbeafe;
+        }
+
+        .bg-yellow-100 {
+            background-color: #fef3c7;
+        }
+
+        .bg-red-100 {
+            background-color: #fee2e2;
+        }
+
+        .bg-gray-100 {
+            background-color: #f3f4f6;
+        }
+
+        .text-green-800 {
+            color: #166534;
+        }
+
+        .text-blue-800 {
+            color: #1e40af;
+        }
+
+        .text-yellow-800 {
+            color: #92400e;
+        }
+
+        .text-red-800 {
+            color: #991b1b;
+        }
+
+        .text-gray-500 {
+            color: #6b7280;
+        }
+
+        .text-gray-500 {
+            color: #6b7280;
+        }
+
+        .rounded {
+            border-radius: 0.25rem;
+        }
+
         .grid {
             display: grid;
         }
@@ -960,13 +1009,13 @@
         // 获取敏感性状态样式
         function getStatusClass(status) {
             const statusClasses = {
-                '推荐': 'text-green-600 font-medium',
-                '有活性': 'text-blue-600',
-                '不确定': 'text-yellow-600',
-                '不推荐': 'text-red-400',
-                '无数据': 'text-gray-400'
+                '推荐': 'bg-green-100 text-green-800 font-medium',
+                '有活性': 'bg-blue-100 text-blue-800',
+                '不确定': 'bg-yellow-100 text-yellow-800',
+                '不推荐': 'bg-red-100 text-red-800',
+                '无数据': 'bg-gray-100 text-gray-500'
             };
-            return statusClasses[status] || 'text-gray-400';
+            return statusClasses[status] || 'bg-gray-100 text-gray-500';
         }
         
         // 创建表格单元格
@@ -1031,7 +1080,7 @@
                     const tr = document.createElement('tr');
                     
                     tr.appendChild(createCell(drug, 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'));
-                    tr.appendChild(createCell(status, `px-6 py-4 whitespace-nowrap text-sm ${getStatusClass(status)}`));
+                    tr.appendChild(createCell(status, `px-6 py-2 whitespace-nowrap text-sm rounded ${getStatusClass(status)}`));
                     
                     resultsBody.appendChild(tr);
                 });
